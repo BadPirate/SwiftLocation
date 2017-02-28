@@ -45,13 +45,13 @@ public enum HeadingObserver {
 
 //MARK: - Heading Request
 
-public class HeadingRequest: Request {
+open class HeadingRequest: Request {
 	
 	/// Callback to call when request's state did change
-	public var onStateChange: ((_ old: RequestState, _ new: RequestState) -> (Void))?
+	open var onStateChange: ((_ old: RequestState, _ new: RequestState) -> (Void))?
 	
 	/// Registered callbacks
-	private var registeredCallbacks: [HeadingObserver] = []
+	fileprivate var registeredCallbacks: [HeadingObserver] = []
 	
 	/// This represent the current state of the Request
 	internal var _previousState: RequestState = .idle
@@ -63,7 +63,7 @@ public class HeadingRequest: Request {
 			}
 		}
 	}
-	public var state: RequestState {
+	open var state: RequestState {
 		get {
 			return self._state
 		}
@@ -71,38 +71,38 @@ public class HeadingRequest: Request {
 	
 	/// The minimum angular change (measured in degrees) required to generate new heading events.
 	/// If nil you will receive any new measured change without any filter.
-	public var filter: CLLocationDegrees? {
+	open var filter: CLLocationDegrees? {
 		didSet {
 			Location.updateHeadingServices()
 		}
 	}
 	
 	/// Assigned request name, used for your own convenience
-	public var name: String?
+	open var name: String?
 	
 	/// Cancel request if an error occours. By default is `false`.
-	public var cancelOnError: Bool = false
+	open var cancelOnError: Bool = false
 	
 	/// Previous measured heading
-	private var previousHeading: CLHeading? = nil
+	fileprivate var previousHeading: CLHeading? = nil
 	
 	/// `true` if request is on location queue
-	public var isInQueue: Bool {
+	open var isInQueue: Bool {
 		return Location.isQueued(self) == true
 	}
 	
 	/// Request type of CLLocationManager authorization
-	public var requiredAuth: Authorization {
+	open var requiredAuth: Authorization {
 		return .none
 	}
 	
 	/// Is this a background request?
-	public var isBackgroundRequest: Bool {
+	open var isBackgroundRequest: Bool {
 		return false
 	}
 	
 	/// Description of the request
-	public var description: String {
+	open var description: String {
 		let name = (self.name ?? self.identifier)
 		return "[HEAD:\(name)] - Filter=\(self.filter) meters. (Status=\(self.state), Queued=\(self.isInQueue))"
 	}
@@ -120,41 +120,41 @@ public class HeadingRequest: Request {
 		}
 		self.name = name
 		self.filter = filter
-		self.add(callback: HeadingObserver.onReceivedHeading(.main, success))
-		self.add(callback: HeadingObserver.onErrorOccurred(.main, failure))
+		self.add(HeadingObserver.onReceivedHeading(.main, success))
+		self.add(HeadingObserver.onErrorOccurred(.main, failure))
 	}
 
-	public func add(callback: HeadingObserver?) {
+	open func add(_ callback: HeadingObserver?) {
 		guard let callback = callback else { return }
 		self.registeredCallbacks.append(callback)
 	}
 	
 	/// Resume a paused request or start it
-	public func resume() {
+	open func resume() {
 		Location.start(self)
 	}
 	
 	/// Pause a running request.
 	///
 	/// - Returns: `true` if request is paused, `false` otherwise.
-	public func pause() {
+	open func pause() {
 		Location.pause(self)
 	}
 	
 	/// Cancel request and remove it from queue.
-	public func cancel() {
+	open func cancel() {
 		Location.cancel(self)
 	}
 	
-	public func onPause() {
+	open func onPause() {
 		
 	}
 	
-	public func onResume() {
+	open func onResume() {
 		
 	}
 	
-	public func onCancel() {
+	open func onCancel() {
 		
 	}
 
@@ -172,10 +172,10 @@ public class HeadingRequest: Request {
 	}
 	
 	/// Unique identifier of the request
-	private var identifier = NSUUID().uuidString
+	fileprivate var identifier = UUID().uuidString
 	
 	/// Hash value for Hashable protocol
-	public var hashValue: Int {
+	open var hashValue: Int {
 		return identifier.hash
 	}
 	
@@ -183,7 +183,7 @@ public class HeadingRequest: Request {
 	/// Dispatch error to callbacks and remove request from queue if `cancelOnError` is `true`.
 	///
 	/// - Parameter error: error to dispatch
-	public func dispatch(error: Error) {
+	open func dispatch(_ error: Error) {
 		self.registeredCallbacks.forEach {
 			if case .onErrorOccurred(let context, let handler) = $0 {
 				context.queue.async { handler(self,error) }
@@ -200,11 +200,11 @@ public class HeadingRequest: Request {
 	/// Dispatch new heading to callbacks
 	///
 	/// - Parameter heading: heading
-	internal func dispatch(heading: CLHeading) {
+	internal func dispatch(_ heading: CLHeading) {
 		defer {
 			self.previousHeading = heading
 		}
-		guard self.filterIsChangedEnough(heading: heading) else { return }
+		guard self.filterIsChangedEnough(heading) else { return }
 		self.registeredCallbacks.forEach {
 			if case .onReceivedHeading(let context, let handler) = $0 {
 				context.queue.async { handler(self,heading) }
@@ -217,7 +217,7 @@ public class HeadingRequest: Request {
 	///
 	/// - Parameter heading: heading to check
 	/// - Returns: `true` if new heading can be dispatched to registered callbacks
-	private func filterIsChangedEnough(heading: CLHeading) -> Bool {
+	fileprivate func filterIsChangedEnough(_ heading: CLHeading) -> Bool {
 		guard let prevHeading = self.previousHeading, let filter = self.filter else {
 			return true
 		}

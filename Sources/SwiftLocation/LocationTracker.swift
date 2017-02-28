@@ -48,7 +48,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	}()
 	
 	/// Initialize func
-	private override init() {
+	fileprivate override init() {
 		self.locationManager = CLLocationManager()
 		super.init()
 		self.locationManager.delegate = self
@@ -85,32 +85,32 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	internal var locationManager: CLLocationManager
 	
 	/// Queued requests regarding location services
-	private var locationRequests: RequestsQueue<LocationRequest> = RequestsQueue()
+	fileprivate var locationRequests: RequestsQueue<LocationRequest> = RequestsQueue()
 	
 	/// Queued requests regarding reverse geocoding services
-	private var geocoderRequests: RequestsQueue<GeocoderRequest> = RequestsQueue()
+	fileprivate var geocoderRequests: RequestsQueue<GeocoderRequest> = RequestsQueue()
 	
 	/// Queued requests regarding heading services
-	private var headingRequests: RequestsQueue<HeadingRequest> = RequestsQueue()
+	fileprivate var headingRequests: RequestsQueue<HeadingRequest> = RequestsQueue()
 
 	/// Queued requests regarding region monitor services
-	private var regionRequests: RequestsQueue<RegionRequest> = RequestsQueue()
+	fileprivate var regionRequests: RequestsQueue<RegionRequest> = RequestsQueue()
 	
 	/// Queued requests regarding visits
-	private var visitRequests: RequestsQueue<VisitsRequest> = RequestsQueue()
+	fileprivate var visitRequests: RequestsQueue<VisitsRequest> = RequestsQueue()
 
 	/// This represent the status of the authorizations before a change
-	private var lastStatus: CLAuthorizationStatus = CLAuthorizationStatus.notDetermined
+	fileprivate var lastStatus: CLAuthorizationStatus = CLAuthorizationStatus.notDetermined
 	
 	/// `true` if location is deferred
-	private(set) var isDeferred: Bool = false
+	fileprivate(set) var isDeferred: Bool = false
 	
 	/// This represent the last locations received (best accurated location and last received location)
-	private(set) var lastLocation = LastLocation()
+	fileprivate(set) var lastLocation = LastLocation()
 	
 	/// Active CoreLocation settings based upon running requests
-	private var _locationSettings: TrackerSettings?
-	private(set) var locationSettings: TrackerSettings? {
+	fileprivate var _locationSettings: TrackerSettings?
+	fileprivate(set) var locationSettings: TrackerSettings? {
 		set {
 			
 			guard let settings = newValue else {
@@ -213,7 +213,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	///   - error: error handler to call when an error did occour while searching for request
 	/// - Returns: request
 	@discardableResult
-	public func getLocation(accuracy: Accuracy, frequency: Frequency, timeout: TimeInterval? = nil, success: @escaping LocObserver.onSuccess, error: @escaping LocObserver.onError) -> LocationRequest {
+	public func getLocation(_ accuracy: Accuracy, frequency: Frequency, timeout: TimeInterval? = nil, success: @escaping LocObserver.onSuccess, error: @escaping LocObserver.onError) -> LocationRequest {
 		
 		let req = LocationRequest(accuracy: accuracy, frequency: frequency, success, error)
 		req.timeout = timeout
@@ -292,7 +292,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	///   - failure: failure handler
 	/// - Returns: request
 	@discardableResult
-	public func getContinousHeading(filter: CLLocationDegrees,
+	public func getContinousHeading(_ filter: CLLocationDegrees,
 	                       success: @escaping HeadingObserver.onSuccess, failure: @escaping HeadingObserver.onError) throws -> HeadingRequest {
 		let request = try HeadingRequest(filter: filter, success: success, failure: failure)
 		request.resume()
@@ -331,7 +331,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	///   - error: callback for errors
 	/// - Throws: throw `LocationError.serviceNotAvailable` if hardware does not support region monitoring
 	@discardableResult
-	public func monitor(region: CLCircularRegion,
+	public func monitor(_ region: CLCircularRegion,
 	                    enter: RegionObserver.onEvent?, exit: RegionObserver.onEvent?, error: @escaping RegionObserver.onFailure) throws -> RegionRequest {
 		let request = try RegionRequest(region: region, onEnter: enter, onExit: exit, error: error)
 		request.resume()
@@ -350,7 +350,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	/// - Returns: request
 	/// - Throws: throw an exception if app does not support alway authorization
 	@discardableResult
-	public func monitorVisit(event: @escaping VisitObserver.onVisit, error: @escaping VisitObserver.onFailure) throws -> VisitsRequest {
+	public func monitorVisit(_ event: @escaping VisitObserver.onVisit, error: @escaping VisitObserver.onFailure) throws -> VisitsRequest {
 		let request = try VisitsRequest(event: event, error: error)
 		request.resume()
 		return request
@@ -575,7 +575,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	/// - Parameters:
 	///   - newState: new state to set
 	///   - states: request's allowed state to be changed
-	private func loc_setRequestState(_ newState: RequestState, forRequestsIn states: Set<RequestState>) {
+	fileprivate func loc_setRequestState(_ newState: RequestState, forRequestsIn states: Set<RequestState>) {
 		locationRequests.forEach {
 			if states.contains($0.state) {
 				$0._state = newState
@@ -585,7 +585,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	
 	//MARK: - Deferred Location Helper Funcs
 	
-	private var isDeferredAvailable: Bool {
+	fileprivate var isDeferredAvailable: Bool {
 		// Seems `deferredLocationUpdatesAvailable()` function does not work properly in iOS 10
 		// It's not clear if it's a bug or not.
 		// Som elinks about the topic:
@@ -604,7 +604,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	/// Evaluate deferred location best settings
 	///
 	/// - Returns: settings to apply
-	private func deferredLocationSettings() -> (meters: Double, timeout: TimeInterval, accuracy: Accuracy)? {
+	fileprivate func deferredLocationSettings() -> (meters: Double, timeout: TimeInterval, accuracy: Accuracy)? {
 		var meters: Double? = nil
 		var timeout: TimeInterval? = nil
 		var accuracyIsNavigation: Bool = false
@@ -621,7 +621,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	
 	
 	/// Turn on and off deferred location updated if needed
-	private func turnOnOrOffDeferredLocationUpdates() {
+	fileprivate func turnOnOrOffDeferredLocationUpdates() {
 		// Turn on/off deferred location updates
 		if let defSettings = deferredLocationSettings() {
 			if self.isDeferred == false {
@@ -644,7 +644,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	/// Evaluate best settings based upon running location requests
 	///
 	/// - Returns: best settings
-	private func locationTrackingBestSettings() -> TrackerSettings? {
+	fileprivate func locationTrackingBestSettings() -> TrackerSettings? {
 		guard locationRequests.countRunning > 0 else {
 			return nil // no settings, location manager can be disabled
 		}
@@ -769,7 +769,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	//MARK: - Update Services Status
 	
 	/// Update services (turn on/off hardware) based upon running requests
-	private func updateServicesStatus() {
+	fileprivate func updateServicesStatus() {
 		let pools = self.pools
 		
 		func updateAllServices() {
@@ -794,7 +794,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 		}
 	}
 	
-	private var pools: [RequestsQueueProtocol] {
+	fileprivate var pools: [RequestsQueueProtocol] {
 		let pools: [RequestsQueueProtocol] = [locationRequests, regionRequests, visitRequests,geocoderRequests,headingRequests]
 		return pools
 	}
@@ -803,7 +803,7 @@ public final class LocationTracker: NSObject, CLLocationManagerDelegate {
 	///
 	/// - Returns: `true` if authorization is needed, `false` otherwise
 	/// - Throws: throw if some required settings are missing
-	private func requireAuthorizationIfNeeded() throws -> Bool {
+	fileprivate func requireAuthorizationIfNeeded() throws -> Bool {
 		func pauseAllRunningRequest() {
 			// Mark running requests as pending
 			pools.forEach { $0.set(.waitingUserAuth, forRequestsIn: [.running,.idle]) }

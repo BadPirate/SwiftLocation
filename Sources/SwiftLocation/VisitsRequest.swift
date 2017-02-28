@@ -50,7 +50,7 @@ public enum VisitObserver {
 
 // MARK: - Visit Request
 
-public class VisitsRequest: Request {
+open class VisitsRequest: Request {
 	
 	/// Returns a Boolean value indicating whether two values are equal.
 	///
@@ -65,22 +65,22 @@ public class VisitsRequest: Request {
 	}
 	
 	/// Unique identifier of the request
-	private var identifier = NSUUID().uuidString
+	fileprivate var identifier = UUID().uuidString
 	
-	public var cancelOnError: Bool = false
+	open var cancelOnError: Bool = false
 	
 	/// Assigned request name, used for your own convenience
-	public var name: String?
+	open var name: String?
 	
 	/// Hash value for Hashable protocol
-	public var hashValue: Int {
+	open var hashValue: Int {
 		return identifier.hash
 	}
 	
 	/// Callback to call when request's state did change
-	public var onStateChange: ((_ old: RequestState, _ new: RequestState) -> (Void))?
+	open var onStateChange: ((_ old: RequestState, _ new: RequestState) -> (Void))?
 	
-	private var registeredCallbacks: [VisitObserver] = []
+	fileprivate var registeredCallbacks: [VisitObserver] = []
 	
 	/// This represent the current state of the Request
 	internal var _previousState: RequestState = .idle
@@ -92,24 +92,24 @@ public class VisitsRequest: Request {
 			}
 		}
 	}
-	public var state: RequestState {
+	open var state: RequestState {
 		get {
 			return self._state
 		}
 	}
 	
-	public var requiredAuth: Authorization {
+	open var requiredAuth: Authorization {
 		return .always
 	}
 	
 	/// Description of the request
-	public var description: String {
+	open var description: String {
 		let name = (self.name ?? self.identifier)
 		return "[VIS:\(name)] (Status=\(self.state), Queued=\(self.isInQueue))"
 	}
 	
 	/// `true` if request is on location queue
-	public var isInQueue: Bool {
+	open var isInQueue: Bool {
 		return Location.isQueued(self) == true
 	}
 	
@@ -129,53 +129,53 @@ public class VisitsRequest: Request {
 			throw LocationError.other("NSLocationAlwaysUsageDescription in Info.plist is required to use Visits feature")
 		}
 		self.name = name
-		self.register(callback: VisitObserver.onDidVisit(.main, event))
-		self.register(callback: VisitObserver.onError(.main, error))
+		self.register(VisitObserver.onDidVisit(.main, event))
+		self.register(VisitObserver.onError(.main, error))
 	}
 	
 	/// Register a new callback for this request
 	///
 	/// - Parameter callback: callback to register
-	public func register(callback: VisitObserver?) {
+	open func register(_ callback: VisitObserver?) {
 		guard let callback = callback else { return }
 		self.registeredCallbacks.append(callback)
 	}
 	
 	/// Pause events dispatch for this request
-	public func pause() {
+	open func pause() {
 		Location.pause(self)
 	}
 	
 	/// Resume events dispatch for this request
-	public func resume() {
+	open func resume() {
 		Location.start(self)
 	}
 	
 	/// Cancel request and remove it from queue.
-	public func cancel() {
+	open func cancel() {
 		Location.cancel(self)
 	}
 	
-	public func onResume() {
+	open func onResume() {
 		
 	}
 	
-	public func onPause() {
+	open func onPause() {
 		
 	}
 	
-	public func onCancel() {
+	open func onCancel() {
 		
 	}
 	
-	public var isBackgroundRequest: Bool {
+	open var isBackgroundRequest: Bool {
 		return true
 	}
 	
 	/// Dispatch CLVisit object to registered callbacks
 	///
 	/// - Parameter visit: visited object
-	internal func dispatch(visit: CLVisit) {
+	internal func dispatch(_ visit: CLVisit) {
 		self.registeredCallbacks.forEach {
 			if case .onDidVisit(let context, let handler) = $0 {
 				context.queue.async {
@@ -189,7 +189,7 @@ public class VisitsRequest: Request {
 	/// Dispatch error to registered callbacks
 	///
 	/// - Parameter error: error
-	public func dispatch(error: Error) {
+	open func dispatch(_ error: Error) {
 		self.registeredCallbacks.forEach {
 			if case .onError(let context, let handler) = $0 {
 				context.queue.async {

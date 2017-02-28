@@ -38,11 +38,11 @@ import MapKit
 
 /// Conformance protocol
 internal protocol RequestsQueueProtocol: CustomStringConvertible {
-	typealias PoolChange = ((Any) -> (Void))
+	associatedtype PoolChange = ((Any) -> (Void))
 
 	var requiredAuthorization: Authorization { get }
-	func dispatch(error: Error)
-	func dispatch(value: Any)
+	func dispatch(_ error: Error)
+	func dispatch(_ value: Any)
 	func set(_ newState: RequestState, forRequestsIn states: Set<RequestState>)
 	
 	var onRemove: PoolChange? { get set }
@@ -61,35 +61,35 @@ internal protocol RequestsQueueProtocol: CustomStringConvertible {
 internal class RequestsQueue<T: Request> : RequestsQueueProtocol, Sequence {
 	
 	/// List of requests in queue
-	private(set) var list: Set<T> = []
+	fileprivate(set) var list: Set<T> = []
 	
 	/// Return the number of queued requests
-	public var count: Int {
+	open var count: Int {
 		return list.count
 	}
 	
 	/// Return the number of paused requests
-	public var countPaused: Int {
+	open var countPaused: Int {
 		return list.reduce(0, { return $0 + ($1.state.isPaused ? 1 : 0) } )
 	}
 	
 	/// Return the number of currently running requests
-	public var countRunning: Int {
+	open var countRunning: Int {
 		return list.reduce(0, { return $0 + ($1.state.isRunning ? 1 : 0) } )
 	}
 
 	/// Callback called when an item was removed from the list
-	public var onRemove: RequestsQueueProtocol.PoolChange? = nil
+	open var onRemove: RequestsQueueProtocol.PoolChange? = nil
 	
 	/// Callback called when a new item is added to the list
-	public var onAdd: RequestsQueueProtocol.PoolChange? = nil
+	open var onAdd: RequestsQueueProtocol.PoolChange? = nil
 	
 	/// Add a new request to the pool
 	///
 	/// - Parameter item: request to append
 	/// - Returns: `true` if request is added, `false` if it's already part of the queue
 	@discardableResult
-	public func add(_ item: T) -> Bool {
+	open func add(_ item: T) -> Bool {
 		guard !self.isQueued(item) else { return false }
 		list.insert(item)
 		onAdd?(item)
@@ -101,7 +101,7 @@ internal class RequestsQueue<T: Request> : RequestsQueueProtocol, Sequence {
 	/// - Parameter item: request to remove
 	/// - Returns: `true` if request was part of the queue, `false` otherwise
 	@discardableResult
-	public func remove(_ item: T) -> Bool {
+	open func remove(_ item: T) -> Bool {
 		guard self.isQueued(item) else { return false }
 		list.remove(item)
 		onRemove?(item)
@@ -112,7 +112,7 @@ internal class RequestsQueue<T: Request> : RequestsQueueProtocol, Sequence {
 	///
 	/// - Parameter item: request
 	/// - Returns: `true` if request is part of the queue, `false` otherwise.
-	public func isQueued(_ item: T) -> Bool {
+	open func isQueued(_ item: T) -> Bool {
 		return list.contains(item)
 	}
 	
@@ -120,11 +120,11 @@ internal class RequestsQueue<T: Request> : RequestsQueueProtocol, Sequence {
 	/// Conform to `Sequence` protocol
 	///
 	/// - Returns: iterator for set
-	public func makeIterator() -> Set<T>.Iterator {
+	open func makeIterator() -> Set<T>.Iterator {
 		return list.makeIterator()
 	}
 	
-	public func set(_ newState: RequestState, forRequestsIn states: Set<RequestState>) {
+	open func set(_ newState: RequestState, forRequestsIn states: Set<RequestState>) {
 		list.forEach {
 			if let request = $0 as? LocationRequest {
 				if states.contains($0.state) {
@@ -137,7 +137,7 @@ internal class RequestsQueue<T: Request> : RequestsQueueProtocol, Sequence {
 	/// Dispatch an error to all running requests
 	///
 	/// - Parameter error: error to dispatch
-	public func dispatch(error: Error) {
+	open func dispatch(_ error: Error) {
 		iterate({ $0.state.isRunning }, { $0.dispatch(error: error) })
 	}
 	
@@ -147,7 +147,7 @@ internal class RequestsQueue<T: Request> : RequestsQueueProtocol, Sequence {
 	/// - Parameters:
 	///   - states: compatible state
 	///   - iteration: iteration block
-	public func iterate(_ states: Set<RequestState>? = nil, _ iteration: ((T) -> (Void))) {
+	open func iterate(_ states: Set<RequestState>? = nil, _ iteration: ((T) -> (Void))) {
 		list.forEach {
 			if states == nil || (states != nil && states!.contains($0.state)) {
 				iteration($0)
@@ -161,7 +161,7 @@ internal class RequestsQueue<T: Request> : RequestsQueueProtocol, Sequence {
 	/// - Parameters:
 	///   - validation: validation handler
 	///   - iteration: iteraor
-	public func iterate(_ validation: ((T) -> (Bool)), _ iteration: ((T) -> (Void))) {
+	open func iterate(_ validation: ((T) -> (Bool)), _ iteration: ((T) -> (Void))) {
 		list.forEach {
 			if validation($0) {
 				iteration($0)
@@ -172,7 +172,7 @@ internal class RequestsQueue<T: Request> : RequestsQueueProtocol, Sequence {
 	
 	
 	/// Resume any waiting for auth request
-	public func resumeWaitingAuth() {
+	open func resumeWaitingAuth() {
 		self.iterate({ request in
 			return request.state == RequestState.waitingUserAuth
 		}) { request in
@@ -183,7 +183,7 @@ internal class RequestsQueue<T: Request> : RequestsQueueProtocol, Sequence {
 	/// Dispatch a value to all running requests
 	///
 	/// - Parameter value: value to dispatch
-	public func dispatch(value: Any) {
+	open func dispatch(_ value: Any) {
 		// Heading request
 		if T.self is HeadingRequest.Type, let v = value as? CLHeading {
 			iterate({ $0.state.isRunning }, { ($0 as! HeadingRequest).dispatch(heading: v) })
@@ -208,7 +208,7 @@ internal class RequestsQueue<T: Request> : RequestsQueueProtocol, Sequence {
 	/// Return `true` if pool contains at least one background request type
 	///
 	/// - Returns: `true` or `false`
-	public func hasBackgroundRequests() -> Bool {
+	open func hasBackgroundRequests() -> Bool {
 		for request in list {
 			if request.isBackgroundRequest {
 				return true
@@ -219,7 +219,7 @@ internal class RequestsQueue<T: Request> : RequestsQueueProtocol, Sequence {
 	
 	/// Return the minimum allowed authorization we should require to allow
 	/// currently queued and running requests
-	public var requiredAuthorization: Authorization {
+	open var requiredAuthorization: Authorization {
 		let auth = list.reduce(.none) { $0 < $1.requiredAuth ? $0 : $1.requiredAuth }
 		return auth
 	}

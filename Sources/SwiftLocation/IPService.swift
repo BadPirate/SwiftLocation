@@ -80,7 +80,7 @@ public struct IPService: CustomStringConvertible {
 	
 	
 	/// Create a request for given service query
-	private var request: NSURLRequest {
+	fileprivate var request: URLRequest {
 		var url: String = ""
 		switch self.service {
 		case .freeGeoIP:	url = "http://freegeoip.net/json/"
@@ -89,9 +89,9 @@ public struct IPService: CustomStringConvertible {
 		case .telize:		url = "http://www.telize.com/geoip/"
 		}
 		let request = NSMutableURLRequest(url: URL(string: url)!,
-		                                  cachePolicy: NSURLRequest.CachePolicy.reloadIgnoringCacheData,
+		                                  cachePolicy: URLRequest.CachePolicy.reloadIgnoringCacheData,
 		                                  timeoutInterval: self.timeout)
-		return request
+		return request as URLRequest
 	}
 	
 	
@@ -100,8 +100,8 @@ public struct IPService: CustomStringConvertible {
 	/// - Parameters:
 	///   - success: callback for success
 	///   - fail: callback for fails
-	public func getLocationFromIP(success: @escaping IPServiceSuccessCallback, fail: @escaping IPServiceFailureCallback)  {
-		self.execute(request: self.request, success, fail)
+	public func getLocationFromIP(_ success: @escaping IPServiceSuccessCallback, fail: @escaping IPServiceFailureCallback)  {
+		self.execute(self.request, success, fail)
 	}
 	
 	
@@ -111,7 +111,7 @@ public struct IPService: CustomStringConvertible {
 	///   - request: request to url
 	///   - success: success callback
 	///   - fail: fail callback
-	private func execute(request: NSURLRequest,
+	fileprivate func execute(_ request: URLRequest,
 	                     _ success: @escaping IPServiceSuccessCallback, _ fail: @escaping IPServiceFailureCallback) {
 		let task = URLSession.shared.dataTask(with: request as URLRequest) { (data, response, error) in
 			do {

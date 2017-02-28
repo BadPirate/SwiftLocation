@@ -48,7 +48,7 @@ import CoreLocation
 /// - room: Best accuracy
 /// - navigation: Best accuracy specific for navigation purposes
 public enum Accuracy: CustomStringConvertible {
-	case IPScan(_: IPService)
+	case ipScan(_: IPService)
 	case any
 	case country
 	case city
@@ -61,7 +61,7 @@ public enum Accuracy: CustomStringConvertible {
 	/// Order by accuracy
 	internal var orderValue: Int {
 	switch self {
-	case .IPScan(_):	return 0
+	case .ipScan(_):	return 0
 	case .any:			return 1
 	case .country:		return 2
 	case .city:			return 3
@@ -76,7 +76,7 @@ public enum Accuracy: CustomStringConvertible {
 	/// Accuracy measured in meters
 	public var meters: Double {
 		switch self {
-		case .IPScan(_):	return Double.infinity
+		case .ipScan(_):	return Double.infinity
 		case .any:			return 1000000.0
 		case .country:		return 100000.0
 		case .city:			return kCLLocationAccuracyThreeKilometers
@@ -109,7 +109,7 @@ public enum Accuracy: CustomStringConvertible {
 	/// CoreLocation user authorizations are required for this accuracy
 	public var requestUserAuth: Bool {
 		get {
-			guard case .IPScan(_) = self else { // only ip-scan does not require auth
+			guard case .ipScan(_) = self else { // only ip-scan does not require auth
 				return true
 			}
 			return false
@@ -119,7 +119,7 @@ public enum Accuracy: CustomStringConvertible {
 	/// Description of the accuracy
 	public var description: String {
 		switch self {
-		case .IPScan(let service):		return "IPScan \(service)"
+		case .ipScan(let service):		return "IPScan \(service)"
 		case .any:						return "Any"
 		case .country:					return "Country"
 		case .city:						return "City"

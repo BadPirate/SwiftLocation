@@ -164,7 +164,7 @@ public protocol Request: class, Hashable, Equatable, CustomStringConvertible {
 	/// Dispatch an error
 	///
 	/// - Parameter error: error
-	func dispatch(error: Error)
+	func dispatch(_ error: Error)
 	
 	/// Return `true` if request is on a queue
 	var isInQueue: Bool { get }
@@ -220,7 +220,7 @@ public enum Authorization : CustomStringConvertible, Comparable, Equatable {
 		}
 	}
 	
-	private var order: Int {
+	fileprivate var order: Int {
 		switch self {
 		case .both:		return 0
 		case .always:	return 1

@@ -78,25 +78,25 @@ public enum RegionEvent {
 
 // MARK: - Region Request
 
-public class RegionRequest: Request {
+open class RegionRequest: Request {
 	
 	/// Callback to call when request's state did change
-	public var onStateChange: ((_ old: RequestState, _ new: RequestState) -> (Void))?
+	open var onStateChange: ((_ old: RequestState, _ new: RequestState) -> (Void))?
 	
 	/// Registered callbacks
-	private var registeredCallbacks: [RegionObserver] = []
+	fileprivate var registeredCallbacks: [RegionObserver] = []
 	
 	/// Callback called when monitoring for this region starts
-	public var onStartMonitoring: ((Void) -> (Void))? = nil
+	open var onStartMonitoring: ((Void) -> (Void))? = nil
 	
 	public typealias DetermineStateCallback = ((CLRegionState) -> (Void))
-	private var stateCallback: DetermineStateCallback? = nil
+	fileprivate var stateCallback: DetermineStateCallback? = nil
 	
 	/// Region to monitor
-	private(set) var region: CLCircularRegion
+	fileprivate(set) var region: CLCircularRegion
 	
 	/// Assigned request name, used for your own convenience
-	public var name: String?
+	open var name: String?
 	
 	/// This represent the current state of the Request
 	internal var _previousState: RequestState = .idle
@@ -108,19 +108,19 @@ public class RegionRequest: Request {
 			}
 		}
 	}
-	public var state: RequestState {
+	open var state: RequestState {
 		get {
 			return self._state
 		}
 	}
 	
 	/// Type of CLLocationManager authorization required by the operation
-	public var requiredAuth: Authorization {
+	open var requiredAuth: Authorization {
 		return .always
 	}
 	
 	/// Is the request a background request?
-	public var isBackgroundRequest: Bool {
+	open var isBackgroundRequest: Bool {
 		return true
 	}
 	
@@ -137,18 +137,18 @@ public class RegionRequest: Request {
 	}
 
 	/// Unique identifier of the request
-	private var identifier = NSUUID().uuidString
+	fileprivate var identifier = UUID().uuidString
 	
 	/// Remove request if an error occours
-	public var cancelOnError: Bool = false
+	open var cancelOnError: Bool = false
 	
 	/// Hash value for Hashable protocol
-	public var hashValue: Int {
+	open var hashValue: Int {
 		return identifier.hash
 	}
 	
 	/// Description of the request
-	public var description: String {
+	open var description: String {
 		let name = (self.name ?? self.identifier)
 		let coordinates = "{\(self.region.center.latitude),\(self.region.center.longitude)}"
 		return "[REG:\(name)]/\(name) - Center=\(coordinates), Radius=\(self.region.radius) meters. (Status=\(self.state), Queued=\(self.isInQueue))"
@@ -169,9 +169,9 @@ public class RegionRequest: Request {
 		
 		self.name = name
 		self.region = region
-		if enter != nil { self.add(callback: .onEnter(.main, enter!)) }
-		if exit != nil { self.add(callback: .onExit(.main, exit!)) }
-		if error != nil { self.add(callback: .onError(.main, error!)) }
+		if enter != nil { self.add(.onEnter(.main, enter!)) }
+		if exit != nil { self.add(.onExit(.main, exit!)) }
+		if error != nil { self.add(.onError(.main, error!)) }
 	}
 	
 	
@@ -191,16 +191,16 @@ public class RegionRequest: Request {
 		
 		self.name = name
 		self.region = CLCircularRegion(center: center, radius: radius, identifier: self.identifier)
-		if enter != nil { self.add(callback: .onEnter(.main, enter!)) }
-		if exit != nil { self.add(callback: .onExit(.main, exit!)) }
-		if error != nil { self.add(callback: .onError(.main, error!)) }
+		if enter != nil { self.add(.onEnter(.main, enter!)) }
+		if exit != nil { self.add(.onExit(.main, exit!)) }
+		if error != nil { self.add(.onError(.main, error!)) }
 	}
 	
 	
 	/// Validate hardware and software configuration in order to use this service.
 	///
 	/// - Throws: Throw an exception if hardware or software configuration are not set properly
-	private class func validateConfiguration() throws {
+	fileprivate class func validateConfiguration() throws {
 		guard CLLocationManager.isMonitoringAvailable(for: CLCircularRegion.self) else {
 			throw LocationError.serviceNotAvailable
 		}
@@ -210,14 +210,14 @@ public class RegionRequest: Request {
 		}
 	}
 	
-	private func add(callback: RegionObserver?) {
+	fileprivate func add(_ callback: RegionObserver?) {
 		guard let callback = callback else { return }
 		registeredCallbacks.append(callback)
 		self.updateNotifications()
 	}
 	
 	/// `true` if request is on location queue
-	public var isInQueue: Bool {
+	open var isInQueue: Bool {
 		return Location.isQueued(self) == true
 	}
 	
@@ -226,7 +226,7 @@ public class RegionRequest: Request {
 	///
 	/// - Parameter callback: callback to return at the end of the operation
 	/// - Returns: `false` if region is not queued or currently running
-	public func determineState(_ callback: @escaping DetermineStateCallback) -> Bool {
+	open func determineState(_ callback: @escaping DetermineStateCallback) -> Bool {
 		guard self.isInQueue, self.state.isRunning else {
 			return false
 		}
@@ -237,7 +237,7 @@ public class RegionRequest: Request {
 	
 	
 	/// Update region notification event to enable/disable notification on exit or enter
-	private func updateNotifications() {
+	fileprivate func updateNotifications() {
 		var hasOnEnterNotify = false
 		var hasOnExitNotify = false
 		for callback in registeredCallbacks {
@@ -250,35 +250,35 @@ public class RegionRequest: Request {
 	}
 	
 	/// Resume a paused request or start it
-	public func resume() {
+	open func resume() {
 		Location.start(self)
 	}
 	
 	/// Pause a running request.
 	///
 	/// - Returns: `true` if request is paused, `false` otherwise.
-	public func pause() {
+	open func pause() {
 		Location.pause(self)
 	}
 	
 	/// Cancel request and remove it from queue.
-	public func cancel() {
+	open func cancel() {
 		Location.cancel(self)
 	}
 	
-	public func onResume() {
+	open func onResume() {
 		
 	}
 	
-	public func onCancel() {
+	open func onCancel() {
 		
 	}
 	
-	public func onPause() {
+	open func onPause() {
 		
 	}
 	
-	public func dispatch(error: Error) {
+	open func dispatch(_ error: Error) {
 		self.registeredCallbacks.forEach {
 			if case .onError(let context, let handler) = $0 {
 				context.queue.async { handler(self,error) }
@@ -295,7 +295,7 @@ public class RegionRequest: Request {
 	/// Dispatch region state events to appropriate registered callbacks
 	///
 	/// - Parameter event: event received
-	internal func dispatch(event: RegionEvent) {
+	internal func dispatch(_ event: RegionEvent) {
 		self.registeredCallbacks.forEach {
 			switch ($0, event) {
 			case (.onEnter(let context, let handler), .entered) :
@@ -311,7 +311,7 @@ public class RegionRequest: Request {
 	/// Dispatch region state events to appropriate registered callbacks
 	///
 	/// - Parameter state: state
-	internal func dispatch(state: CLRegionState) {
+	internal func dispatch(_ state: CLRegionState) {
 		stateCallback?(state)
 	}
 	

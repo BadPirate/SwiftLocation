@@ -48,7 +48,7 @@ public extension CLLocation {
 	///					the specified address could not be resolved to a single location.
 	///   - fail:		callback to execute on failure. Failure may be a generic error or `LocationError.noData` if no
 	///					placemark were found.
-	public func reverse(timeout: TimeInterval? = nil,
+	public func reverse(_ timeout: TimeInterval? = nil,
 	                    _ success: @escaping GeocoderObserver.onSuccess, _ failure: @escaping GeocoderObserver.onError ) {
 		Location.getPlacemark(forLocation: self, timeout: timeout, success: success, failure: failure)
 	}
@@ -66,7 +66,7 @@ public extension String {
 	///					the specified address could not be resolved to a single location.
 	///   - failure:	callback to execute on failure
 	@discardableResult
-	public func reverse(timeout: TimeInterval? = nil,
+	public func reverse(_ timeout: TimeInterval? = nil,
 	                    _ success: @escaping GeocoderObserver.onSuccess, _ failure: @escaping GeocoderObserver.onError ) -> GeocoderRequest {
 		return Location.getLocation(forAddress: self, timeout: timeout, success: success, failure: failure)
 	}
@@ -79,7 +79,7 @@ public extension CLLocationManager {
 		self.monitoredRegions.forEach { self.stopMonitoring(for: $0) }
 	}
 	
-	public class func getLocation(accuracy: Accuracy, frequency: Frequency, timeout: TimeInterval? = nil, success: @escaping LocObserver.onSuccess, error: @escaping LocObserver.onError) -> LocationRequest {
+	public class func getLocation(_ accuracy: Accuracy, frequency: Frequency, timeout: TimeInterval? = nil, success: @escaping LocObserver.onSuccess, error: @escaping LocObserver.onError) -> LocationRequest {
 		return Location.getLocation(accuracy: accuracy, frequency: frequency, timeout: timeout, success: success, error: error)
 	}
 	
@@ -94,7 +94,7 @@ public extension CLLocationManager {
 public extension CLCircularRegion {
 	
 	@discardableResult
-	public func monitor(enter: RegionObserver.onEvent?,
+	public func monitor(_ enter: RegionObserver.onEvent?,
 	                    exit: RegionObserver.onEvent?,
 	                    error: @escaping RegionObserver.onFailure) throws -> RegionRequest {
 		return try Location.monitor(region: self, enter: enter, exit: exit, error: error)

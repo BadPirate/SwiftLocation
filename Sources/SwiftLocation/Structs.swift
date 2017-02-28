@@ -81,7 +81,7 @@ public struct LastLocation {
 	/// Store last value
 	///
 	/// - Parameter location: location to set
-	mutating internal func set(location: CLLocation) {
+	mutating internal func set(_ location: CLLocation) {
 		if bestAccurated == nil {
 			self.bestAccurated = location
 		} else if location.horizontalAccuracy > self.bestAccurated!.horizontalAccuracy {

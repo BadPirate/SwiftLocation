@@ -70,34 +70,34 @@ public enum GeocoderSource: CustomStringConvertible {
 
 // MARK: - Geocoder Request
 
-public class GeocoderRequest: Request {
+open class GeocoderRequest: Request {
 	
 	/// Cached placemark founds
-	private var foundPlacemarks: [CLPlacemark]?
+	fileprivate var foundPlacemarks: [CLPlacemark]?
 	
 	/// Last received error
-	private(set) var lastError: Error?
+	fileprivate(set) var lastError: Error?
 	
 	/// Instance of geocoder
-	private var geocoder: CLGeocoder? = nil
+	fileprivate var geocoder: CLGeocoder? = nil
 	
 	/// Unique identifier of the request
-	private var identifier = NSUUID().uuidString
+	fileprivate var identifier = UUID().uuidString
 	
 	/// Type of geocoding
-	private(set) var source: GeocoderSource
+	fileprivate(set) var source: GeocoderSource
 	
 	/// Callback to call when request's state did change
-	public var onStateChange: ((_ old: RequestState, _ new: RequestState) -> (Void))?
+	open var onStateChange: ((_ old: RequestState, _ new: RequestState) -> (Void))?
 	
 	/// Callbacks registered
-	public var registeredCallbacks: [GeocoderObserver] = []
+	open var registeredCallbacks: [GeocoderObserver] = []
 	
 	/// Remove queued request if an error has occurred. By default is `false`.
-	public var cancelOnError: Bool = false
+	open var cancelOnError: Bool = false
 	
 	/// Assigned request name, used for your own convenience
-	public var name: String?
+	open var name: String?
 	
 	/// This represent the current state of the Request
 	internal var _previousState: RequestState = .idle
@@ -109,26 +109,26 @@ public class GeocoderRequest: Request {
 			}
 		}
 	}
-	public var state: RequestState {
+	open var state: RequestState {
 		get {
 			return self._state
 		}
 	}
 	
 	/// Description of the request
-	public var description: String {
+	open var description: String {
 		let name = (self.name ?? self.identifier)
 		return "[RGEO:\(name)] - Src=\(self.source) (Status=\(self.state), Queued=\(self.isInQueue))"
 	}
 	
 	/// Is this a background enabled request?
-	public var isBackgroundRequest: Bool {
+	open var isBackgroundRequest: Bool {
 		return false
 	}
 	
 	/// Set a valid interval to enable a timer. Timeout starts automatically
-	private var timeoutTimer: Timer?
-	public var timeout: TimeInterval? = nil {
+	fileprivate var timeoutTimer: Timer?
+	open var timeout: TimeInterval? = nil {
 		didSet {
 			timeoutTimer?.invalidate()
 			timeoutTimer = nil
@@ -160,8 +160,8 @@ public class GeocoderRequest: Request {
 	            _ success: @escaping GeocoderObserver.onSuccess, _ failure: @escaping GeocoderObserver.onError) {
 		self.name = name
 		self.source = .address(address, region)
-		self.add(callback: GeocoderObserver.onReversed(.main, success))
-		self.add(callback: GeocoderObserver.onErrorOccurred(.main, failure))
+		self.add(GeocoderObserver.onReversed(.main, success))
+		self.add(GeocoderObserver.onErrorOccurred(.main, failure))
 	}
 	
 	/// Initialize a new reverse geocoder request for a `CLLocation` instance.
@@ -173,8 +173,8 @@ public class GeocoderRequest: Request {
 	public init(location: CLLocation,
 	            _ success: @escaping GeocoderObserver.onSuccess, _ failure: @escaping GeocoderObserver.onError) {
 		self.source = .location(location)
-		self.add(callback: GeocoderObserver.onReversed(.main, success))
-		self.add(callback: GeocoderObserver.onErrorOccurred(.main, failure))
+		self.add(GeocoderObserver.onReversed(.main, success))
+		self.add(GeocoderObserver.onErrorOccurred(.main, failure))
 	}
 	
 	/// Initialize a new reverse geocoder request for an Address Book dictionary containing information about the address to look up.
@@ -186,51 +186,51 @@ public class GeocoderRequest: Request {
 	public init(abDictionary: [AnyHashable : Any],
 	            _ success: @escaping GeocoderObserver.onSuccess, _ failure: @escaping GeocoderObserver.onError) {
 		self.source = .abDictionary(abDictionary)
-		self.add(callback: GeocoderObserver.onReversed(.main, success))
-		self.add(callback: GeocoderObserver.onErrorOccurred(.main, failure))
+		self.add(GeocoderObserver.onReversed(.main, success))
+		self.add(GeocoderObserver.onErrorOccurred(.main, failure))
 	}
 	
 	/// Register a new callback to call on `success` or `failure`
 	///
 	/// - Parameter callback: callback to append into registered callback list
-	public func add(callback: GeocoderObserver?) {
+	open func add(_ callback: GeocoderObserver?) {
 		guard let callback = callback else { return }
 		self.registeredCallbacks.append(callback)
 	}
 	
 	/// Implementation of the hash function
-	public var hashValue: Int {
+	open var hashValue: Int {
 		return identifier.hash
 	}
 	
 	/// Authorization required by the operation
-	public var requiredAuth: Authorization {
+	open var requiredAuth: Authorization {
 		return .none
 	}
 	
 	/// `true` if request is on location queue
-	public var isInQueue: Bool {
+	open var isInQueue: Bool {
 		return Location.isQueued(self) == true
 	}
 	
 	/// Resume a paused request or start it
-	public func resume() {
+	open func resume() {
 		Location.start(self)
 	}
 	
 	/// Pause a running request.
 	///
 	/// - Returns: `true` if request is paused, `false` otherwise.
-	public func pause() {
+	open func pause() {
 		Location.pause(self)
 	}
 	
 	/// Cancel request and remove it from queue.
-	public func cancel() {
+	open func cancel() {
 		Location.cancel(self)
 	}
 	
-	public func onResume() {
+	open func onResume() {
 		if let foundPlacemarks = self.foundPlacemarks {
 			self.dispatch(placemarks: foundPlacemarks)
 			return
@@ -270,7 +270,7 @@ public class GeocoderRequest: Request {
 	/// Dispatch error to any failure registered callback
 	///
 	/// - Parameter error: error to dispatch
-	public func dispatch(error: Error) {
+	open func dispatch(_ error: Error) {
 		self.registeredCallbacks.forEach {
 			if case .onErrorOccurred(let context, let handler) = $0 {
 				context.queue.async { handler(error) }
@@ -281,7 +281,7 @@ public class GeocoderRequest: Request {
 	/// Dispatch placemarks to any success registered callback
 	///
 	/// - Parameter placemarks: placemarks to dispatch
-	private func dispatch(placemarks: [CLPlacemark]) {
+	fileprivate func dispatch(_ placemarks: [CLPlacemark]) {
 		self.registeredCallbacks.forEach {
 			if case .onReversed(let context, let handler) = $0 {
 				context.queue.async { handler(placemarks) }
@@ -289,12 +289,12 @@ public class GeocoderRequest: Request {
 		}
 	}
 	
-	public func onPause() {
+	open func onPause() {
 		// Cancel geocoding request
 		geocoder?.cancelGeocode()
 	}
 	
-	public func onCancel() {
+	open func onCancel() {
 		
 	}
 	
